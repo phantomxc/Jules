@@ -54,10 +54,13 @@ describe("Jules Master", function(ev) {
 
 describe("Jules", function() {
     var j;
+    var jm;
     var request
     beforeEach(function() {
+        // FAKING THE JULESMASTER
+        jm = jasmine.createSpyObj('jm', ['addJS', 'addCSS', 'remove']);
         jasmine.Ajax.useMock();
-        j = new Jules('theurl');
+        j = new Jules('theurl', jm);
     });
 
     it("should create a new Jules instance", function() {
@@ -65,6 +68,7 @@ describe("Jules", function() {
     });
 
     it("should set some intialize variables", function() {
+        expect(j.master).toBe(jm);
         expect(j.container).toBeDefined();
         expect(j.content).toBeDefined();
         expect(j.nav).toBeDefined();
@@ -83,6 +87,7 @@ describe("Jules", function() {
         expect(j.content.hasClassName('jule-content')).toBe(true);
         expect(j.container.hasClassName('jule-container')).toBe(true);
         expect(j.nav.hasClassName('jule-nav')).toBe(true);
+        expect(j.error.hasClassName('jule-error')).toBe(true);
     });
 
     it("should insert the content, nav, loading, and error divs into the container", function() {
@@ -132,6 +137,10 @@ describe("Jules", function() {
             
             it("should close the jule when you click the close button", function() {
                 expect(j.close).toHaveBeenCalled();
+            });
+
+            it("should remove it from the master", function() {
+                expect(jm.remove).toHaveBeenCalledWith(j.jid);
             });
 
             it("should remove the element", function() {
@@ -249,4 +258,91 @@ describe("Jules", function() {
 
     });
 
+});
+
+
+describe("Jules with options", function(ev) {
+    var j;
+    var jm;
+    var request
+
+    beforeEach(function() {
+        jm = jasmine.createSpyObj('jm', ['addCSS', 'remove']);
+        jasmine.Ajax.useMock();
+        j = new Jules('theurl', jm, {
+            'js_file':'test.js',
+            'js_func':'test_func',
+            'css_file':'test.css',
+            'content_class':'test-content',
+            'container_class':'test-container',
+            'loading_class':'test-loading',
+            'error_class':'test-error',
+            'nav_class':'test-nav',
+            'afterInit':function() {window['afterinit'] = true},
+            'afterContent': function() {window['afterContent'] = true},
+            'custom_buttons':[
+                {
+                    'type':'span',
+                    'class':'custom_btn',
+                    'func':function(s, b) { b.observe('click', function(ev) {
+                        window['custom_btn'] = true;
+                    });}
+                }
+            ]
+
+        });
+
+        spyOn(j, 'buildJS').andCallThrough();
+        spyOn(j, 'buildCSS').andCallThrough();
+    });
+
+    it("should set the custom class names", function() {
+        expect(j.content.hasClassName('test-content')).toBe(true);
+        expect(j.container.hasClassName('test-container')).toBe(true);
+        expect(j.nav.hasClassName('test-nav')).toBe(true);
+        expect(j.error.hasClassName('test-error')).toBe(true);
+    });
+
+    it("should have a custom button", function() {
+        expect(j.nav.childElements().length).toBe(3);
+    });
+
+    describe("buildJS", function() {
+        
+        beforeEach(function() {
+            jm.addJS = null;
+            spyOn(jm, 'addJS').andCallFake(function() {
+                window['fakingtest'] = 'ohhai';
+            });
+            request = mostRecentAjaxRequest();
+            request.response({
+                status:200,
+                contentType: "text/html",
+                responseText: "functgion test_func() { window['testing_init'] = 'it works'; }"
+            })
+        });
+
+        it("should call buildJS", function() {
+            expect(j.buildJS).toHaveBeenCalled();
+        });
+
+        it("should call addJS on the master", function() {
+            expect(window['fakingtest']).toBe('ohhai');
+        });
+
+        it("should execute the test_func once the script has been inserted", function() {
+            
+        });
+
+
+
+
+
+
+
+
+
+
+
+    });
 });
