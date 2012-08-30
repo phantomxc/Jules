@@ -1,8 +1,12 @@
 describe("Jules Master", function(ev) {
     var jm;
+    var request;
 
     beforeEach(function(ev) {
         jm = new JulesMaster('body');
+        //capture ajax requests
+        jasmine.Ajax.useMock();
+        request = mostRecentAjaxRequest();
     });
 
     it("should create a master instance", function(ev) {
@@ -50,7 +54,9 @@ describe("Jules Master", function(ev) {
 
 describe("Jules", function() {
     var j;
+    var request
     beforeEach(function() {
+        jasmine.Ajax.useMock();
         j = new Jules('theurl');
     });
 
@@ -66,6 +72,7 @@ describe("Jules", function() {
         expect(j.error).toBeDefined();
         expect(j.url).toEqual('theurl');
         expect(j.jid).toBeDefined();
+        expect(j.event_list).toEqual([]);
     });
 
     it("should have some default values", function() {
@@ -92,43 +99,58 @@ describe("Jules", function() {
 
     describe("Nav Buttons", function() {
         beforeEach(function() {
-            spyOn(j, 'close');
-            spyOn(j, 'refresh');
+            spyOn(j, 'close').andCallThrough();
+            spyOn(j, 'refresh').andCallThrough();
         });
 
         it("should have two default buttons in the nav", function() {
             expect(j.nav.childElements().length).toBe(2);
         });
 
-        it("should refresh the jule when you click the refresh button", function() {
-            j.nav.childElements()[0].simulate('click');
-            expect(j.refresh).toHaveBeenCalled();
-        });
+        describe("Refresh", function() {
+
+            beforeEach(function() {
+                spyOn(j, 'buildContent');
+                j.nav.childElements()[0].simulate('click');
+            });
         
-        it("should close the jule when you click the close button", function() {
-            j.nav.childElements()[1].simulate('click');
-            expect(j.close).toHaveBeenCalled();
+            it("should refresh the jule when you click the refresh button", function() {
+                expect(j.refresh).toHaveBeenCalled();
+            });
+
+            it("should call buildContent", function() {
+                expect(j.buildContent).toHaveBeenCalled();
+            });
         });
 
+        describe("Close", function() {
+            
+            beforeEach(function() {
+                $('body').update(j.container);
+                j.nav.childElements()[1].simulate('click');
+            });
+            
+            it("should close the jule when you click the close button", function() {
+                expect(j.close).toHaveBeenCalled();
+            });
+
+            it("should remove the element", function() {
+                expect($('body').childElements().length).toBe(0);
+            });
+        });
     });
 
     describe("Jules Content", function() {
-        var request;
         beforeEach(function() {
             spyOn(j, 'buildContent').andCallThrough();
-            spyOn(j, 'doneLoading').andCallThrough();
             spyOn(j, 'buildJS');
             spyOn(j, 'buildCSS');
-            //request = mostRecentAjaxRequest();
+            request = mostRecentAjaxRequest();
             j.buildContent();
         });
 
         it("should buildContent", function() {
             expect(j.buildContent).toHaveBeenCalled();
-        });
-
-        it("should call doneLoading", function() {
-            expect(j.doneLoading).toHaveBeenCalled();
         });
 
         it("should not call buildJS", function() {
@@ -138,8 +160,93 @@ describe("Jules", function() {
         it("should not call buildCSS", function() {
             expect(j.buildCSS).not.toHaveBeenCalled();
         });
+
+        it("should make a request to the url passed in on init", function() {
+            expect(request.url).toBe('theurl');
+        });
+
+        describe("AJAX Success", function() {
+            
+            beforeEach(function() {
+                spyOn(j, 'doneLoading').andCallThrough();
+                request = mostRecentAjaxRequest();
+                request.response({
+                    status:200,
+                    responseText: 'the contents'
+                });
+            });
+        
+            it("should update the content with the response", function() {
+                expect(j.content.innerHTML).toBe('the contents');
+            });
+
+            it("should call doneLoading", function() {
+                expect(j.doneLoading).toHaveBeenCalled();
+            });
+        });
+
+        describe("AJAX Error", function() {
+            
+            beforeEach(function() {
+                spyOn(j, 'doneLoading').andCallThrough();
+                spyOn(j, 'showError').andCallThrough();
+                request = mostRecentAjaxRequest();
+                request.response({
+                    status:500,
+                    responseText: 'the errors'
+                });
+            });
+            
+            it("should call doneLoading", function() {
+                expect(j.doneLoading).toHaveBeenCalled();
+            });
+
+            it("should call showError", function() {
+                expect(j.showError).toHaveBeenCalledWith('the errors');
+            });
+
+            it("should make error visible", function() {
+                expect(j.error.visible()).toBe(true);
+            });
+        });
         
     });
 
-    
+    describe("Custom global events", function() {
+        window["eventcount"] = 0;
+
+        beforeEach(function() {
+            spyOn(j, 'observe').andCallThrough();
+        });
+
+        it("should add the event to the event_list", function() {
+            j.observe('jules:test', function(ev) {
+                window["eventcount"] += 1;
+            });
+
+            document.fire('jules:test');
+            expect(j.event_list).toEqual(['jules:test']);
+            expect(window["eventcount"]).toEqual(1);
+        });
+
+        it("should fire the event on document", function() {
+            j.event_list.push('jules:test');
+            j.observe('jules:test', function(ev) {
+                window["eventcount"] += 1;
+            });
+            document.fire('jules:test');
+            expect(window["eventcount"]).toEqual(2);
+        });
+
+        it("seting up the observe on jules shouldn't set it up again on document", function() {
+            j.event_list.push('jules:test');
+            j.observe('jules:test', function(ev) {
+                window["eventcount"] += 3;
+            });
+            document.fire('jules:test');
+            expect(window["eventcount"]).toEqual(3);
+        });
+
+    });
+
 });
