@@ -53,6 +53,18 @@ describe("Jules Master", function(ev) {
         });
     });
 
+    describe("create some jules with options", function() {
+        var j;
+        beforeEach(function() {
+            spyOn(jm, 'create').andCallThrough();
+            j = jm.create('test', {'content_class':'custom_class'});
+        });
+
+        it("should have the custom class assigned to the jules content", function() {
+            expect(j.content.hasClassName('custom_class')).toBe(true);
+        });
+    });
+
     describe("addJS", function() {
         var j;
         var hlength;
