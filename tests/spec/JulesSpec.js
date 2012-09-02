@@ -102,6 +102,31 @@ describe("Jules Master", function(ev) {
             expect(window["jid"]).toEqual(12);
         });
     });
+
+    describe("addCSS", function() {
+        var j;
+        var hlength;
+        beforeEach(function() {
+            hlength = $$('head')[0].childElements().length;
+            jm.addCSS('julios.css');
+            request = mostRecentAjaxRequest();
+            request.response({
+                status:200,
+                responseText: 'some css'
+            });
+        });
+
+        it("should add the css file to the css_list", function() {
+            expect(jm.css_list).toContain('julios.css');
+        });
+
+        it("should only add the file once to the object and the head", function() {
+            jm.addCSS('julios.css');
+            expect(jm.css_list.length).toBe(1);
+            expect($$('head')[0].childElements().length).toBe(hlength+1);
+        });
+
+    });
 });
 
 
