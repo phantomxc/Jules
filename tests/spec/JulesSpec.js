@@ -215,6 +215,22 @@ describe("Jules Master", function(ev) {
                 it("should set the active layout as the one just saved", function() {
                     expect(localStorage.getItem('active_jule_layout')).toBe('layout1');
                 });
+
+                describe("availableLayouts", function() {
+                    var available;
+                    
+                    beforeEach(function() {
+                        l = jm.getLayouts();
+                        jm.saveLayout('another_layout', l);
+                        available = jm.availableLayouts();
+                    });
+
+                    it("should return an array of layout names to choose from", function() {
+                        expect(available.length).toBe(2);
+                        expect(available).toContain('another_layout');
+                        expect(available).toContain('layout1');
+                    });
+                });
             });
 
             describe("loadLayout", function() {

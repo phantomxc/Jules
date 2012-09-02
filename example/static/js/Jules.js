@@ -52,8 +52,76 @@ JulesMaster = Class.create({
             });
             h.insert(l);
         }
+    },
+
+    getLayouts: function() {
+        
+        var layouts = {};
+        for(i=0;i<this.jules_list.length;i++) {
+            var j = this.jules_list[i];
+            var l = new Element.Layout(j.container);
+            if (layouts.hasOwnProperty(j.url)) {
+                layouts[j.url].push({
+                    'width':l.get('width'),
+                    'height':l.get('height'),
+                    'left':l.get('left'),
+                    'top':l.get('top')
+                });
+            } else {
+            layouts[j.url] = [{
+                'width':l.get('width'),
+                'height':l.get('height'),
+                'left':l.get('left'),
+                'top':l.get('top')
+                }]
+            }
+        }
+        return layouts;
+    },
+
+    saveLayout: function(name, layouts) {
+        localStorage.setItem('active_jule_layout', name);
+        if (localStorage.getItem('jule_layouts') == null) {
+            localStorage.setItem('jule_layouts', Object.toJSON({}));
+        }
+        var orig_obj = localStorage.getItem('jule_layouts').evalJSON();
+        var new_obj = {};
+        new_obj[name] = layouts;
+        var ext = Object.extend(orig_obj, new_obj);
+        localStorage.setItem('jule_layouts', Object.toJSON(ext));
+    },
+
+    loadLayout: function(name) {
+        localStorage.setItem('active_jule_layout', name);
+        var layout = localStorage.getItem('jule_layouts').evalJSON();
+        var counter = {};
+        for(i=0;i<this.jules_list.length;i++) {
+            var j = this.jules_list[i];
+            if (layout[name].hasOwnProperty(j.url)) {
+                (counter.hasOwnProperty(j.url)) ? counter[j.url] += 1 : counter[j.url] = 0;
+                var c = counter[j.url];
+
+                var style = {}
+                for(k in layout[name][j.url][c]) {
+                    style[k] = layout[name][j.url][c][k] + 'px';
+                }
+                j.container.setStyle(style);
+            }
+        }
+    },
+
+    availableLayouts: function() {
+        var layouts = localStorage.getItem('jule_layouts').evalJSON();
+        a = [];
+        for (k in layouts) {
+            a.push(k);
+        }
+        return a;
     }
 });
+
+
+
 
 Jules = Class.create({
     initialize: function(url, master) {
@@ -79,7 +147,7 @@ Jules = Class.create({
 
         // BUILD SOME HTML
         this.container = new Element('div', {
-            'class':this.opts.container_class,
+            'class':this.opts.container_class + ' jule',
             'id':this.jid
         });
         this.nav = new Element('div', {
