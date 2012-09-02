@@ -6,7 +6,6 @@ describe("Jules Master", function(ev) {
         jm = new JulesMaster('body');
         //capture ajax requests
         jasmine.Ajax.useMock();
-        request = mostRecentAjaxRequest();
     });
 
     it("should create a master instance", function(ev) {
@@ -36,7 +35,7 @@ describe("Jules Master", function(ev) {
             j = jm.create('test');
         });
 
-        it("should call create with the jules name", function() {
+        it("should call create with the jules html url", function() {
             expect(jm.create).toHaveBeenCalledWith('test');  
         });
 
@@ -47,6 +46,60 @@ describe("Jules Master", function(ev) {
         it("should add the jules instance to it's jules_list", function() {
             expect(jm.jules_list.length).toBe(1);
             expect(jm.jules_list).toContain(j);
+        });
+
+        it("should insert the jule into the master container", function() {
+            expect(jm.container.childElements()).toContain(j.container);
+        });
+    });
+
+    describe("addJS", function() {
+        var j;
+        var hlength;
+        beforeEach(function() {
+            //number of elements in the head
+            hlength = $$('head')[0].childElements().length;
+            // FAKING JULES
+            j = {'jid':12};
+            jm.jules_list.push(j);
+            spyOn(jm, 'addJS').andCallThrough();
+            jm.addJS('julios.js', 'julios', j.jid);
+            window["test"] = 0;
+            request = mostRecentAjaxRequest();
+            request.response({
+                status:200,
+                responseText: 'function julios(j) {window["test"] += 1; window["jid"] = j.jid}'
+            });
+
+        });
+
+        afterEach(function() {
+            // remove the script we just added for testing
+            var h = $$('head')[0];
+            Element.remove(h.childElements()[h.childElements().length -1]);
+        });
+
+        it("should add the js file to the js_list", function() {
+            expect(jm.js_list).toContain('julios.js');
+        });
+
+        it("should only add the file once", function() {
+            jm.addJS('julios.js', 'julios', j.jid);
+            expect(jm.js_list.length).toBe(1);
+        });
+
+        it("should insert the script into the head and execute it", function() {
+            expect(window["test"]).toEqual(1);
+        });
+
+        it("should not insert the script again but execute it", function() {
+            jm.addJS('julios.js', 'julios', j.jid);
+            expect(window["test"]).toEqual(2);
+            expect($$('head')[0].childElements().length).toBe(hlength+1);
+        });
+
+        it("should pass in the jules instance to the function", function() {
+            expect(window["jid"]).toEqual(12);
         });
     });
 });
@@ -267,7 +320,18 @@ describe("Jules with options", function(ev) {
     var request
 
     beforeEach(function() {
-        jm = jasmine.createSpyObj('jm', ['addCSS', 'remove']);
+        jm = jasmine.createSpyObj('jm', ['remove']);
+        
+        jm.addCSS = null;
+        spyOn(jm, 'addCSS').andCallFake(function(css) {
+            window['addCSSFake'] = css;
+        });
+        
+        jm.addJS = null;
+        spyOn(jm, 'addJS').andCallFake(function(j, f, i) {
+            window['addJSFake'] = [j,f,i];
+        });
+
         jasmine.Ajax.useMock();
         j = new Jules('theurl', jm, {
             'js_file':'test.js',
@@ -291,9 +355,6 @@ describe("Jules with options", function(ev) {
             ]
 
         });
-
-        spyOn(j, 'buildJS').andCallThrough();
-        spyOn(j, 'buildCSS').andCallThrough();
     });
 
     it("should set the custom class names", function() {
@@ -310,39 +371,31 @@ describe("Jules with options", function(ev) {
     describe("buildJS", function() {
         
         beforeEach(function() {
-            jm.addJS = null;
-            spyOn(jm, 'addJS').andCallFake(function() {
-                window['fakingtest'] = 'ohhai';
-            });
             request = mostRecentAjaxRequest();
             request.response({
                 status:200,
                 contentType: "text/html",
-                responseText: "functgion test_func() { window['testing_init'] = 'it works'; }"
+                responseText: "function test_func() { alert('thiswould be executable js'); }"
             })
         });
 
-        it("should call buildJS", function() {
-            expect(j.buildJS).toHaveBeenCalled();
+        it("should call addJS on the master. This also confirms buildJS was called correctly", function() {
+            expect(window['addJSFake']).toEqual(['test.js', 'test_func', j.jid]);
         });
 
-        it("should call addJS on the master", function() {
-            expect(window['fakingtest']).toBe('ohhai');
+    });
+
+    describe("buildCSS", function() {
+        
+        beforeEach(function() {
+            jm.addCSS = null;
+            spyOn(jm, 'addCSS').andCallFake(function(css) {
+                window['addCSSFake'] = css;
+            });
         });
 
-        it("should execute the test_func once the script has been inserted", function() {
-            
+        it("should call addCSS on the master. This also confirms buildCSS was called correctly", function() {
+            expect(window['addCSSFake']).toEqual('test.css');
         });
-
-
-
-
-
-
-
-
-
-
-
     });
 });
