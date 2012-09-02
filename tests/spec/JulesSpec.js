@@ -206,7 +206,7 @@ describe("Jules", function() {
 
             beforeEach(function() {
                 spyOn(j, 'buildContent');
-                j.nav.childElements()[0].simulate('click');
+                j.nav.childElements()[1].simulate('click');
             });
         
             it("should refresh the jule when you click the refresh button", function() {
@@ -222,7 +222,7 @@ describe("Jules", function() {
             
             beforeEach(function() {
                 $('body').update(j.container);
-                j.nav.childElements()[1].simulate('click');
+                j.nav.childElements()[0].simulate('click');
             });
             
             it("should close the jule when you click the close button", function() {
@@ -403,6 +403,14 @@ describe("Jules with options", function(ev) {
 
     it("should have a custom button", function() {
         expect(j.nav.childElements().length).toBe(3);
+    });
+    
+    it("should execute the afterInit function", function() {
+        expect(window['afterinit']).toBe(true);
+    });
+
+    it("should execute the afterContent function", function() {
+        expect(window['afterinit']).toBe(true);
     });
 
     describe("buildJS", function() {

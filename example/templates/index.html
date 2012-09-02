@@ -1,0 +1,30 @@
+<html>
+    <head>
+        <script type="text/javascript" src="/js/prototype.js"></script>
+        <script type="text/javascript" src="/js/resizable.js"></script>
+        <script type="text/javascript" src="/js/Jules.js"></script>
+        <script type="text/javascript" src="/js/effects.js"></script>
+        <script type="text/javascript" src="/js/dragdrop.js"></script>
+        <link href="/css/Jules.css" rel="stylesheet" type="text/css">
+            
+        <script type="text/javascript">
+            document.observe('dom:loaded', function(ev) {
+                var m = new JulesMaster('the_container');
+                var j = m.create('jules1', {
+                    'afterContent':function(jule) {
+                        new Draggable(jule.container, {'handle':jule.nav});
+                        if(!this.r) {
+                            var r = new Resizable(jule.container);
+                            this.r = r;
+                        }
+                    }
+                });
+            });
+        </script>
+
+    </head>
+    <body>
+        <div id="the_container">
+        </div>
+    </body>
+</html>

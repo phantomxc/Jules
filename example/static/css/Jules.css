@@ -1,0 +1,66 @@
+#the_container {
+    width:1000px;
+    height:1000px;
+}
+
+
+div.jule-container {
+    border:1px solid black;
+    position:absolute;
+    width:300px;
+    height:300px;
+    padding-bottom:20px;
+}
+
+div.jule-nav {
+    background-color:black;
+    height:20px;
+    width:100%;
+}
+
+div.jule-content {
+    width:100%;
+    height:100%;
+    position:relative;
+    overflow:auto;
+}
+
+div.jule-content .padding {
+    padding:10px;
+}
+
+span.refresh_btn {
+    float:right;
+    width:10px;
+    height:10px;
+    background-color:green;
+    margin-top:5px;
+    display:block;
+    cursor:pointer;
+}
+
+span.close_btn {
+    float:right;
+    width:10px;
+    height:10px;
+    background-color:red;
+    display:block;
+    margin: 5px 5px 0px 10px;
+    cursor:pointer;
+}
+
+div.jule-loading {
+    z-index:100;
+    background-color:#FFF;
+    opacity:.5;
+    position:absolute;
+    width:100%;
+    height:100%;
+    background-image: url('/img/ajax-loader.gif');
+    background-repeat:no-repeat;
+    background-position:center center;
+}
+
+div.resizer {
+    cursor:pointer;
+}
