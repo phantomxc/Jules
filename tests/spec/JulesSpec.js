@@ -139,6 +139,134 @@ describe("Jules Master", function(ev) {
         });
 
     });
+
+
+    describe("layouts", function() {
+        beforeEach(function() {
+
+            //removing anything stored in the browser related to layouts
+            localStorage.removeItem('jule_layouts');
+            localStorage.removeItem('active_jule_layout');
+            j1 = jm.create('j1');
+            j1.container.setStyle({
+                'position':'absolute',
+                'width':'100px',
+                'height':'100px',
+                'left':'200px',
+                'top':'20px',
+            });
+            j2 = jm.create('j2');
+            j2.container.setStyle({
+                'position':'absolute',
+                'width':'100px',
+                'height':'100px',
+                'left':'400px',
+                'top':'20px',
+            });
+        });
+
+        describe("getLayouts", function() {
+
+            beforeEach(function() {
+                spyOn(jm, 'getLayouts').andCallThrough();
+                l = jm.getLayouts()
+            });
+
+            it("should return an object with all the current jule positions", function() {
+                expect(l).toEqual(
+                {
+                    'j1':[{'width':100,'height':100,'left':200,'top':20}],
+                    'j2':[{'width':100,'height':100,'left':400,'top':20}]
+                });
+            });
+
+            it("should allow for multiple jules with the same url", function() {
+                j3 = jm.create('j2');
+                j3.container.setStyle({
+                    'position':'absolute',
+                    'width':'100px',
+                    'height':'100px',
+                    'left':'600px',
+                    'top':'20px',
+                });
+                l = jm.getLayouts()
+                expect(l).toEqual({
+                    'j1':[{'width':100,'height':100,'left':200,'top':20}],
+                    'j2':[
+                        {'width':100,'height':100,'left':400,'top':20},
+                        {'width':100,'height':100,'left':600,'top':20}
+                    ]
+                });
+            });
+
+            describe("saveLayout", function() {
+                var l
+
+                beforeEach(function() {
+                    l = jm.getLayouts();
+                    jm.saveLayout('layout1', l);
+                });
+
+                it("should save the layout in localStorage with the name and layouts provided", function() {
+                    var obj = {'layout1':l};
+                    expect(localStorage.getItem('jule_layouts').evalJSON()).toEqual(obj);
+                });
+
+                it("should set the active layout as the one just saved", function() {
+                    expect(localStorage.getItem('active_jule_layout')).toBe('layout1');
+                });
+            });
+
+            describe("loadLayout", function() {
+                
+                beforeEach(function() {
+                    l = jm.getLayouts();
+                    jm.saveLayout('layout1', l);
+
+                    jm.saveLayout('layout2', {
+                        'j1':[{'width':150,'height':150,'left':150,'top':20}],
+                        'j2':[
+                            {'width':150,'height':150,'left':350,'top':20},
+                            {'width':150,'height':150,'left':550,'top':20}
+                        ]   
+                    });
+
+                    jm.loadLayout('layout2');
+                });
+
+                it("should update the active layout", function() {
+                    jm.loadLayout('layout1');
+                    expect(localStorage.getItem('active_jule_layout')).toBe('layout1');
+                });
+
+                it("should move the jules to the position of layout2", function() {
+                    expect(j1.container.getStyle('width')).toBe('150px');
+                    expect(j1.container.getStyle('left')).toBe('150px');
+                });
+
+                it("should do it to all the jules", function() {
+                    expect(j2.container.getStyle('width')).toBe('150px');
+                    expect(j2.container.getStyle('left')).toBe('350px');
+                });
+
+                it("should support multiple jules with multiple layouts and should apply them in order", function() {
+                    j3 = jm.create('j2');
+                    j3.container.setStyle({
+                        'position':'absolute',
+                        'width':'100px',
+                        'height':'100px',
+                        'left':'600px',
+                        'top':'20px',
+                    });
+                    jm.loadLayout('layout2');
+
+                    expect(j3.container.getStyle('width')).toBe('150px');
+                    expect(j3.container.getStyle('left')).toBe('550px');
+                });
+            });
+        });
+        
+    });
 });
 
 
@@ -176,6 +304,7 @@ describe("Jules", function() {
     it("should set the default class names for some elements", function() {
         expect(j.content.hasClassName('jule-content')).toBe(true);
         expect(j.container.hasClassName('jule-container')).toBe(true);
+        expect(j.container.hasClassName('jule')).toBe(true);
         expect(j.nav.hasClassName('jule-nav')).toBe(true);
         expect(j.error.hasClassName('jule-error')).toBe(true);
     });
