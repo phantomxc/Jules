@@ -31,7 +31,9 @@ describe("Jules Master", function(ev) {
     describe("Create some Jules", function(ev) {
         var j;
         beforeEach(function(ev) {
+            localStorage.removeItem('active_jule_layout');
             spyOn(jm, 'create').andCallThrough();
+            spyOn(jm, 'loadLayout');
             j = jm.create('test');
         });
 
@@ -51,12 +53,23 @@ describe("Jules Master", function(ev) {
         it("should insert the jule into the master container", function() {
             expect(jm.container.childElements()).toContain(j.container);
         });
+
+        it("should not call loadLayout wihtout an active layout", function() {
+            expect(jm.loadLayout).not.toHaveBeenCalled();
+        });
+
+        it("should call loadLayout with an active layout", function() {
+            localStorage.setItem('active_jule_layout', 'test');
+            j = jm.create('test2');
+            expect(jm.loadLayout).toHaveBeenCalled();
+        });
     });
 
     describe("create some jules with options", function() {
         var j;
         beforeEach(function() {
             spyOn(jm, 'create').andCallThrough();
+            spyOn(jm, 'loadLayout');
             j = jm.create('test', {'content_class':'custom_class'});
         });
 
@@ -72,7 +85,7 @@ describe("Jules Master", function(ev) {
             //number of elements in the head
             hlength = $$('head')[0].childElements().length;
             // FAKING JULES
-            j = {'jid':12};
+            j = {'jid':12,'opts':{'js_file':'julios.js'}};
             jm.jules_list.push(j);
             spyOn(jm, 'addJS').andCallThrough();
             jm.addJS('julios.js', 'julios', j.jid);
@@ -165,11 +178,11 @@ describe("Jules Master", function(ev) {
             });
         });
 
-        describe("getLayouts", function() {
+        describe("getPositions", function() {
 
             beforeEach(function() {
-                spyOn(jm, 'getLayouts').andCallThrough();
-                l = jm.getLayouts()
+                spyOn(jm, 'getPositions').andCallThrough();
+                l = jm.getPositions()
             });
 
             it("should return an object with all the current jule positions", function() {
@@ -189,7 +202,7 @@ describe("Jules Master", function(ev) {
                     'left':'600px',
                     'top':'20px',
                 });
-                l = jm.getLayouts()
+                l = jm.getPositions()
                 expect(l).toEqual({
                     'j1':[{'width':100,'height':100,'left':200,'top':20}],
                     'j2':[
@@ -203,7 +216,7 @@ describe("Jules Master", function(ev) {
                 var l
 
                 beforeEach(function() {
-                    l = jm.getLayouts();
+                    l = jm.getPositions();
                     jm.saveLayout('layout1', l);
                 });
 
@@ -220,7 +233,7 @@ describe("Jules Master", function(ev) {
                     var available;
                     
                     beforeEach(function() {
-                        l = jm.getLayouts();
+                        l = jm.getPositions();
                         jm.saveLayout('another_layout', l);
                         available = jm.availableLayouts();
                     });
@@ -231,12 +244,24 @@ describe("Jules Master", function(ev) {
                         expect(available).toContain('layout1');
                     });
                 });
+
+                describe("activeLayout", function() {
+                    
+                    beforeEach(function() {
+                        l = jm.getPositions();
+                        jm.saveLayout('another_layout', l);
+                    });
+
+                    it("should return the active layout name", function() {
+                        expect(jm.activeLayout()).toBe('another_layout');
+                    });
+                });
             });
 
             describe("loadLayout", function() {
                 
                 beforeEach(function() {
-                    l = jm.getLayouts();
+                    l = jm.getPositions();
                     jm.saveLayout('layout1', l);
 
                     jm.saveLayout('layout2', {

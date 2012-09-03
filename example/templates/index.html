@@ -9,41 +9,31 @@
             
         <script type="text/javascript">
             document.observe('dom:loaded', function(ev) {
-                var m = new JulesMaster('the_container');
-                var j = m.create('jules1', {
-                    'afterContent':function(jule) {
-                        new Draggable(jule.container, {'handle':jule.nav});
-                        if(!this.r) {
-                            var r = new Resizable(jule.container);
-                            this.r = r;
-                        }
-                        this.container.setStyle({'position':'absolute'});
-                    }
-                });
-                
-                var j1 = m.create('jules1', {
-                    'afterContent':function(jule) {
-                        new Draggable(jule.container, {'handle':jule.nav});
-                        if(!this.r) {
-                            var r = new Resizable(jule.container);
-                            this.r = r;
-                        }
-                        this.container.setStyle({'position':'absolute'});
-                    }
-                });
-                
-                var j2 = m.create('jules2', {
-                    'afterContent':function(jule) {
-                        new Draggable(jule.container, {'handle':jule.nav});
-                        if(!this.r) {
-                            var r = new Resizable(jule.container);
-                            this.r = r;
-                        }
-                        this.container.setStyle({'position':'absolute'});
-                    }
-                });
 
-                // SETUP THE BUTTON STUFF
+                var m = new JulesMaster('the_container');
+                
+                //CREATE SOME JULES THAT ARE DRAGGABLE AND RESIZABLE
+                ['jules1','jules2','jules1'].each(function(name) {
+                    var j = m.create(name, {
+                        'js_file':'/js/'+name+'.js',
+                        'js_func':name+'_init',
+                        'afterInit':function(jule) {
+                            new Draggable(jule.container, {'handle':jule.nav});
+                            var r = new Resizable(jule.container);
+                            jule.r = r;
+                            jule.observe('jules:resized', function(ev) {
+                                jule.r.setResizer();
+                            });
+                            jule.container.setStyle({'position':'absolute'});
+                        },
+                        'afterContent':function(jule) {
+                            jule.r.setResizer();
+                        }
+                    });
+                });
+                
+
+                // SETUP THE BUTTON THAT CONTROL THE LAYOUTS
                 function available(jm) {
                     var select = $('layouts');
                     select.update('');
@@ -60,8 +50,7 @@
                 available(m);
 
                 $('save').observe('click', function(ev) {
-                    var l = m.getLayouts();
-                    console.log(l);
+                    var l = m.getPositions();
                     var selected = $('layouts').getValue();
                     m.saveLayout(selected, l);
                 }.bind(m));
@@ -77,6 +66,8 @@
                 $('load').observe('click', function(ev) {
                     var selected = $('layouts').getValue();
                     m.loadLayout(selected);
+                    //This sets the resizers in the correct posision
+                    document.fire('jules:resized');
                 }.bind(m));
             });
         </script>
