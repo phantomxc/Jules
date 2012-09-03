@@ -48,6 +48,12 @@ class Jules1(Resource):
     def render_POST(self, request):
         return jrender(request, 'jules1.html')
 
+class Jules2(Resource):
+    """
+    Example 2
+    """
+    def render_POST(self, request):
+        return jrender(request, 'jules2.html')
 
 #URL HANDLING
 root = Resource()
@@ -65,6 +71,7 @@ root.putChild('img', img_resource)
 root.putChild('', MainResource())
 
 root.putChild("jules1", Jules1())
+root.putChild("jules2", Jules2())
 
 factory = Site(root)
 reactor.listenTCP(8989, factory)

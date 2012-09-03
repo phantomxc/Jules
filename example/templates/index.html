@@ -17,13 +17,81 @@
                             var r = new Resizable(jule.container);
                             this.r = r;
                         }
+                        this.container.setStyle({'position':'absolute'});
                     }
                 });
+                
+                var j1 = m.create('jules1', {
+                    'afterContent':function(jule) {
+                        new Draggable(jule.container, {'handle':jule.nav});
+                        if(!this.r) {
+                            var r = new Resizable(jule.container);
+                            this.r = r;
+                        }
+                        this.container.setStyle({'position':'absolute'});
+                    }
+                });
+                
+                var j2 = m.create('jules2', {
+                    'afterContent':function(jule) {
+                        new Draggable(jule.container, {'handle':jule.nav});
+                        if(!this.r) {
+                            var r = new Resizable(jule.container);
+                            this.r = r;
+                        }
+                        this.container.setStyle({'position':'absolute'});
+                    }
+                });
+
+                // SETUP THE BUTTON STUFF
+                function available(jm) {
+                    var select = $('layouts');
+                    select.update('');
+                    jm.availableLayouts().each(function(l) {
+                        var o = new Element('option').insert(l);
+                        select.insert(o);
+                    });
+                    
+                    if (select.childElements().length > 0) {
+                        m.loadLayout($('layouts').getValue());
+                    }
+                }
+
+                available(m);
+
+                $('save').observe('click', function(ev) {
+                    var l = m.getLayouts();
+                    console.log(l);
+                    var selected = $('layouts').getValue();
+                    m.saveLayout(selected, l);
+                }.bind(m));
+
+                $('new').observe('click', function(ev) {
+                    var name = prompt("Enter the name of your new layout.", "");
+                    if (name != null && name != "") {
+                        var o = new Element('option', {'SELECTED':'SELECTED'}).insert(name);
+                        $('layouts').insert(o);
+                    }
+                }.bind(m));
+
+                $('load').observe('click', function(ev) {
+                    var selected = $('layouts').getValue();
+                    m.loadLayout(selected);
+                }.bind(m));
             });
         </script>
 
     </head>
     <body>
+
+        <div>
+            <select id="layouts">
+            </select>
+            <input id="load" type="button" value="Load">
+            <input id="new" type="button" value="New">
+            <input id="save" type="button" value="Save">
+        </div>
+
         <div id="the_container">
         </div>
     </body>

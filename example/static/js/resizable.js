@@ -46,7 +46,7 @@ Resizable = Class.create();
 
             //Container
             this.c = elm;
-            this.c.setStyle({'position':'relative'});
+            //this.c.setStyle({'position':'relative'});
             
             //Resizer Element
             this.resizer = new Element('div', {'class':this.options['class_name']});
