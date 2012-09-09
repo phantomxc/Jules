@@ -86,6 +86,7 @@ describe("Jules Master", function(ev) {
             hlength = $$('head')[0].childElements().length;
             // FAKING JULES
             j = {'jid':12,'opts':{'js_file':'julios.js'}};
+            j2 = {'jid':22,'opts':{'js_file':'julios.js'}};
             jm.jules_list.push(j);
             spyOn(jm, 'addJS').andCallThrough();
             jm.addJS('julios.js', 'julios', j.jid);
@@ -125,6 +126,19 @@ describe("Jules Master", function(ev) {
 
         it("should pass in the jules instance to the function", function() {
             expect(window["jid"]).toEqual(12);
+        });
+
+        describe("add another jule with the same js", function() {
+            
+            beforeEach(function() {
+                j2 = {'jid':22,'opts':{'js_file':'julios.js'}};
+                jm.jules_list.push(j2);
+                jm.addJS('julios.js', 'julios', j2.jid);
+            });
+
+            it("should execute the init function again even though the javascript file already exist", function() {
+                expect(window["jid"]).toBe(22);
+            });
         });
     });
 

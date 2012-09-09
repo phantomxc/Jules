@@ -11,6 +11,7 @@
             document.observe('dom:loaded', function(ev) {
 
                 var m = new JulesMaster('the_container');
+                window['master'] = m;
                 
                 //CREATE SOME JULES THAT ARE DRAGGABLE AND RESIZABLE
                 ['jules1','jules2','jules1'].each(function(name) {
@@ -34,10 +35,13 @@
                 
 
                 // SETUP THE BUTTON THAT CONTROL THE LAYOUTS
+
+                // HELPER FUNCTION
                 function available(jm) {
                     var select = $('layouts');
                     select.update('');
                     jm.availableLayouts().each(function(l) {
+                        console.log(l);
                         var o = new Element('option').insert(l);
                         select.insert(o);
                     });
@@ -49,12 +53,16 @@
 
                 available(m);
 
+                // SETUP EVENTS ON SAVE BUTTON
                 $('save').observe('click', function(ev) {
                     var l = m.getPositions();
                     var selected = $('layouts').getValue();
-                    m.saveLayout(selected, l);
+                    if (selected) {
+                        m.saveLayout(selected, l);
+                    }
                 }.bind(m));
-
+                
+                // SETUP EVENTS ON NEW BUTTON
                 $('new').observe('click', function(ev) {
                     var name = prompt("Enter the name of your new layout.", "");
                     if (name != null && name != "") {
@@ -63,12 +71,36 @@
                     }
                 }.bind(m));
 
-                $('load').observe('click', function(ev) {
+                // LOAD DIFFERENT LAYOUT WHEN THEY SELECT A NEW ONE
+                $('layouts').observe('change', function(ev) {
                     var selected = $('layouts').getValue();
                     m.loadLayout(selected);
                     //This sets the resizers in the correct posision
                     document.fire('jules:resized');
                 }.bind(m));
+
+                // CREATE ANOTHER JULE 1
+                $('test').observe('click', function(ev) {
+                   
+                    var name = 'jules1';
+                    var j = m.create(name, {
+                        'js_file':'/js/'+name+'.js',
+                        'js_func':name+'_init',
+                        'afterInit':function(jule) {
+                            new Draggable(jule.container, {'handle':jule.nav});
+                            var r = new Resizable(jule.container);
+                            jule.r = r;
+                            jule.observe('jules:resized', function(ev) {
+                                jule.r.setResizer();
+                            });
+                            jule.container.setStyle({'position':'absolute'});
+                        },
+                        'afterContent':function(jule) {
+                            jule.r.setResizer();
+                        }
+                    });
+                
+                });
             });
         </script>
 
@@ -78,12 +110,13 @@
         <div>
             <select id="layouts">
             </select>
-            <input id="load" type="button" value="Load">
             <input id="new" type="button" value="New">
             <input id="save" type="button" value="Save">
         </div>
 
         <div id="the_container">
+            <br />
+            <input id="test" type="button" value="Create Another Jule1">
         </div>
     </body>
 </html>
